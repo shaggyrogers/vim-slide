@@ -27,11 +27,11 @@ a line are considered whitespace.
 will not move past the end or start of a line.
 
 Each of these is accepted in |operator-pending| mode, and considered a jump
-if the cursor moves more than one line or column. To increase or disable the
-jumplist behaviour, see |slide-jumplist|.
+if the cursor moves more than one line or column (by default). For information
+on jumplist behaviour, see |slide-jumplist|.
 
 -------------------------------------------------------------------------------
-1.1 Default Mappings                                   *slide-default-mappings*
+1.1 Default Mappings                                       *slide-default-maps*
 
 By default, the following mappings are added automatically: >
 
@@ -40,21 +40,30 @@ By default, the following mappings are added automatically: >
     <M-k> <Plug>SlideUp
     <M-l> <Plug>SlideRight
 <
-See |slide-default-maps|.
+See |slide-default-mappings|.
 
 ===============================================================================
 2. Options                                                      *slide-options*
 
-g:slide#DefaultMaps                                        *slide-default-maps*
+g:slide#DefaultMappings                                *slide-default-mappings*
 
     Type: |Number|
     Default: `1`
 
-    If nonzero, adds the default mappings. See |slide-default-mappings|.
+    If nonzero, adds the default mappings. See |slide-default-maps|.
 
 
-g:slide#JumpMinColumns                                 *slide-jump-min-columns*
-g:slide#JumpMinLines                                     *g:slide#JumpMinLines*
+g:slide#Folds#Skip                                           *slide-folds-skip*
+
+    Type: |Number|
+    Default: `1`
+
+    When set to `1`, closed |folds| are treated as a single line for line-wise
+    movement.
+
+
+g:slide#JumpList#Columns                               *slide-jump-min-columns*
+g:slide#JumpList#Lines                                   *slide-jump-min-lines*
                                                                *slide-jumplist*
     Type: |Number|
     Default: `2`
@@ -63,7 +72,7 @@ g:slide#JumpMinLines                                     *g:slide#JumpMinLines*
     to the |jumplist|. Set either to `0` to prevent |jumplist| updates.
 
 
-g:slide#LeftRightSkip                                   *slide-left-right-skip*
+g:slide#LeftRight#Skip                                  *slide-left-right-skip*
 
     Type: |Number|
     Default: `1`
@@ -73,14 +82,14 @@ g:slide#LeftRightSkip                                   *slide-left-right-skip*
     while moving right or left respectively.
 
 
-g:slide#UpDownPattern                                   *slide-up-down-pattern*
-g:slide#LeftRightPattern                             *slide-left-right-pattern* 
+g:slide#UpDown#Pattern                                  *slide-up-down-pattern*
+g:slide#LeftRight#Pattern                            *slide-left-right-pattern*
 
     Type: |String|
     Default: `"\S"`
 
-    A vim-style |regular-expression|, matching a single character only, that
-    dictates which characters are "whitespace".
+    A pair of vim-style |regular-expression|s, each matching a single character.
+    Matching characters are considered "non-|whitespace|" for and vice-versa.
 
 ===============================================================================
  vim:tw=78:ts=8:noet:ft=help:norl:fenc=utf-8:

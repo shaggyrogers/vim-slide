@@ -5,32 +5,32 @@
 " Description:           Contains all the functionality for this plugin.
 " Author:                Michael De Pasquale <shaggyrogers>
 " Creation Date:         2019-07-21
-" Modification Date:     2019-09-05
+" Modification Date:     2019-12-09
 "
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " Set up options and mappings.
 function! slide#Init() abort "{{{
-    noremap  <SID>SlideLeft  <cmd>call <SID>Move('left',  g:slide#LeftRightPattern)<CR>
-    noremap  <SID>SlideDown  <cmd>call <SID>Move('down',  g:slide#UpDownPattern)<CR>
-    noremap  <SID>SlideUp    <cmd>call <SID>Move('up',    g:slide#UpDownPattern)<CR>
-    noremap  <SID>SlideRight <cmd>call <SID>Move('right', g:slide#LeftRightPattern)<CR>
-    onoremap <SID>SlideLeft  <cmd>call <SID>Move('left',  g:slide#LeftRightPattern, -1)<CR>
-    onoremap <SID>SlideDown  <cmd>call <SID>Move('down',  g:slide#UpDownPattern)<CR>
-    onoremap <SID>SlideUp    <cmd>call <SID>Move('up',    g:slide#UpDownPattern, -1)<CR>
-    onoremap <SID>SlideRight <cmd>call <SID>Move('right', g:slide#LeftRightPattern)<CR>
+    noremap  <SID>SlideLeft  <cmd>call <SID>Move('left',  g:slide#LeftRight#Pattern)<CR>
+    noremap  <SID>SlideDown  <cmd>call <SID>Move('down',  g:slide#UpDown#Pattern)<CR>
+    noremap  <SID>SlideUp    <cmd>call <SID>Move('up',    g:slide#UpDown#Pattern)<CR>
+    noremap  <SID>SlideRight <cmd>call <SID>Move('right', g:slide#LeftRight#Pattern)<CR>
+    onoremap <SID>SlideLeft  <cmd>call <SID>Move('left',  g:slide#LeftRight#Pattern, -1)<CR>
+    onoremap <SID>SlideDown  <cmd>call <SID>Move('down',  g:slide#UpDown#Pattern)<CR>
+    onoremap <SID>SlideUp    <cmd>call <SID>Move('up',    g:slide#UpDown#Pattern, -1)<CR>
+    onoremap <SID>SlideRight <cmd>call <SID>Move('right', g:slide#LeftRight#Pattern)<CR>
 
     noremap <unique> <script> <nowait> <Plug>SlideLeft  <SID>SlideLeft
     noremap <unique> <script> <nowait> <Plug>SlideDown  <SID>SlideDown
     noremap <unique> <script> <nowait> <Plug>SlideUp    <SID>SlideUp
     noremap <unique> <script> <nowait> <Plug>SlideRight <SID>SlideRight
 
-    if g:slide#DefaultMaps
+    if g:slide#DefaultMappings
         if maparg('<M-h>') != '' || maparg('<M-j>') != ''
                     \ || maparg('<M-k>') != '' || maparg('<M-l>') != ''
             let l:warn = 'Slide: Not setting default mappings, one or more of'
                         \ . ' ALT + h/j/k/l are already in use.'
-                        \ . ' Set g:slide#DefaultMaps = 0 in your .vimrc or'
+                        \ . ' Set g:slide#DefaultMappings = 0 in your .vimrc or'
                         \ . ' remove these mappings.'
             echohl WarningMsg | echomsg l:warn | echohl None
             let v:warningmsg = l:warn
@@ -86,10 +86,10 @@ function! s:Move(dir, ...) abort " {{{
     endif
 
     " Add to jumplist
-    if (g:slide#JumpMinLines > 0
-                \ && abs(line('.') - l:pos[1]) >= g:slide#JumpMinLines)
-            \ || (g:slide#JumpMinColumns > 0
-                \ && abs(col('.') - l:pos[2]) >= g:slide#JumpMinColumns)
+    if (g:slide#JumpList#Lines > 0
+                \ && abs(line('.') - l:pos[1]) >= g:slide#JumpList#Lines)
+            \ || (g:slide#JumpList#Columns > 0
+                \ && abs(col('.') - l:pos[2]) >= g:slide#JumpList#Columns)
         execute "normal! m'"
     endif
 
@@ -123,7 +123,7 @@ function! s:MoveLR(dir, pat, count) abort " {{{
     let l:P1 = '(\m' . a:pat . '\v)@<!'
     let l:P2 = '(\m' . a:pat . '\v)@!'
 
-    if g:slide#LeftRightSkip
+    if g:slide#LeftRight#Skip
         let l:pat = printf('((%s%s%s)|(%s%s%s)|$|^)', l:P1, l:P1, l:p1, l:P1, l:p1, l:p2)
     else
         let l:pat = printf('((%s%s)|(%s%s)|$|^)', l:P1, l:p1, l:p1, l:P2)
@@ -190,18 +190,33 @@ function! s:MoveUD(dir, pat, count) abort " {{{
         return v:null
     endif
 
+    function! s:DoSkipFolds(line, step)
+        if !g:slide#Folds#Skip
+            return a:line
+        endif
+
+        let l:foldend = a:step == 1 ? foldclosedend(a:line) : foldclosed(a:line)
+
+        return l:foldend == -1 ? a:line : l:foldend
+    endfunction
+
+    function! s:StepUD(line, col, step, pat, lastLine)
+        let l:newline = s:DoSkipFolds(a:line, a:step) + a:step
+        let l:startMatch = !s:CheckScreenChar(l:newline, a:col, a:pat)
+
+        " Keep stepping until transition (!match -> match or match -> !match)
+        while !s:CheckScreenChar(l:newline, a:col, a:pat) == l:startMatch
+                    \ && 1 <= l:newline && l:newline <= a:lastLine
+            let l:newline = s:DoSkipFolds(l:newline + a:step, a:step)
+        endwhile
+
+        return l:startMatch ? l:newline : l:newline - a:step
+    endfunction
+
     " Trace path up/down along virtual column
     for l:i in range(1, a:count)
-        let l:line = l:line + l:step
-        let l:startMatch = !s:CheckScreenChar(l:line, l:col, a:pat)
-
-        while !s:CheckScreenChar(l:line, l:col, a:pat) == l:startMatch
-                    \ && 1 <= l:line && l:line <= l:lastLine
-            let l:line += l:step
-        endwhile
+        let l:line = s:StepUD(l:line, l:col, l:step, a:pat, l:lastLine)
     endfor
-
-    let l:line = l:startMatch ? l:line : l:line - l:step
 
     " Convert virtual column to buffer column
     let l:col = s:ScreenToBufferColumn(l:line, l:col)
@@ -210,4 +225,4 @@ function! s:MoveUD(dir, pat, count) abort " {{{
     return l:curpos
 endfunction " }}}
 
-" vim: set ts=4 sw=4 tw=79 fdm=marker fenc=utf-8 et :
+" vim: set ts=4 sw=4 tw=79 fdm=marker ff=unix fenc=utf-8 et :
