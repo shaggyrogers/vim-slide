@@ -5,7 +5,7 @@
 " Description:           Contains all the functionality for this plugin.
 " Author:                Michael De Pasquale <shaggyrogers>
 " Creation Date:         2019-07-21
-" Modification Date:     2019-12-09
+" Modification Date:     2020-02-25
 "
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -225,4 +225,4 @@ function! s:MoveUD(dir, pat, count) abort " {{{
     return l:curpos
 endfunction " }}}
 
-" vim: set ts=4 sw=4 tw=79 fdm=marker ff=unix fenc=utf-8 et :
+" vim: set ts=4 sw=4 tw=90 fdm=marker ff=unix fenc=utf-8 et :
