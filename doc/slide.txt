@@ -69,7 +69,8 @@ g:slide#JumpList#Lines                                   *slide-jump-min-lines*
     Default: `2`
 
     The minimum number of lines or columns moved before the movement is added
-    to the |jumplist|. Set either to `0` to prevent |jumplist| updates.
+    to the |jumplist|. Set either to `0` to prevent |jumplist| updates for the
+    corresponding movements.
 
 
 g:slide#LeftRight#Skip                                  *slide-left-right-skip*
