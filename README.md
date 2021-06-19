@@ -12,9 +12,9 @@ The following was recorded using default options:
 
 ## Installation
 
-Installation using vim-plug is recommended, but other plugin managers and manual installation will also work.
+Installation using [vim-plug](https://github.com/junegunn/vim-plug) is recommended, but other plugin managers and manual installation will also work.
 
-Using vim-plug:
+Using [vim-plug](https://github.com/junegunn/vim-plug):
 
 
 ```
